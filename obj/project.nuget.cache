@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "dgSpecHash": "lkkAQSFXpBtcrgKqcsXTS2/rVz4slW9eR2AqtKiifTXwc/j7CwSn6iZwTcz+QTfuVlhDIL3YC2Ib+MqVZp2hHQ==",
+  "success": true,
+  "projectFilePath": "D:\\projects\\TridentMc\\TridentMc.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Stephan\\.nuget\\packages\\netcoreserver\\3.0.12\\netcoreserver.3.0.12.nupkg.sha512",
+    "C:\\Users\\Stephan\\.nuget\\packages\\newtonsoft.json\\12.0.3\\newtonsoft.json.12.0.3.nupkg.sha512",
+    "C:\\Users\\Stephan\\.nuget\\packages\\serilog\\2.9.1-dev-01172\\serilog.2.9.1-dev-01172.nupkg.sha512",
+    "C:\\Users\\Stephan\\.nuget\\packages\\serilog.sinks.console\\4.0.0-dev-00839\\serilog.sinks.console.4.0.0-dev-00839.nupkg.sha512",
+    "C:\\Users\\Stephan\\.nuget\\packages\\serilog.sinks.file\\5.0.0-dev-00876\\serilog.sinks.file.5.0.0-dev-00876.nupkg.sha512"
+  ],
+  "logs": []
+}
