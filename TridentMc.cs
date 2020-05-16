@@ -56,9 +56,7 @@ namespace TridentMc
         {
             while (!State.IsShuttingDown)
             {
-                EventManager.Tick();
                 Thread.Sleep(50);
-                EventManager.Tock();
             }
         }
     }

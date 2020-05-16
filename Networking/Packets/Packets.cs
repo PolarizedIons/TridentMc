@@ -7,53 +7,30 @@ using TridentMc.Networking.State;
 
 namespace TridentMc.Networking.Packets
 {
-    public interface IPacket
+    public abstract class BasePacket
     {
-        ConnectionState ConnectionState { get; }
-        int Id { get; }
-        PacketDirection DirectionTo { get; }
     }
 
-    public interface IServerPacket : IPacket
+    public abstract class ServerPacket : BasePacket
     {
-        PacketDirection IPacket.DirectionTo => PacketDirection.ServerBound;
+        protected ServerPacket() {}
 
-        IServerPacket Decode(byte[] data);
+        protected ServerPacket(PacketBuffer bytes)
+        {
+        }
+
+        public abstract void Handle(ServerSession session);
     }
 
-    public interface IClientPacket : IPacket
+    public abstract class ClientPacket : BasePacket
     {
-        PacketDirection IPacket.DirectionTo => PacketDirection.ClientBound;
+        public virtual int Id { get; }
 
-        byte[] Encode(IClientPacket packet);
+        public abstract PacketBuffer Encode();
     }
 
     public interface IChangesState
     {
         ConnectionState NextState { get; }
-    }
-
-    class Packets
-    {
-        public static List<IPacket> PacketsList { get; private set; }
-
-        public Packets()
-        {
-            PacketsList = new List<IPacket>();
-
-            // Handshaking
-            PacketsList.Add(new PacketHandshaking());
-            
-            // Status
-            PacketsList.Add(new PacketRequest());
-            PacketsList.Add(new PacketResponse());
-            PacketsList.Add(new PacketPing());
-            PacketsList.Add(new PacketPong());
-        }
-
-        public T Get<T>(PacketDirection directionTo, ConnectionState state, int id) where T : IPacket
-        {
-            return (T) PacketsList.Find(packet => packet.DirectionTo == directionTo && packet.Id == id && packet.ConnectionState == state);
-        }
     }
 }

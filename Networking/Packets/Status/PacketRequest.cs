@@ -3,14 +3,16 @@ using TridentMc.Networking.State;
 
 namespace TridentMc.Networking.Packets.Status
 {
-    public class PacketRequest : IServerPacket
+    public class PacketRequest : ServerPacket
     {
-        public ConnectionState ConnectionState => ConnectionState.Status;
-        public int Id => 0x00;
-
-        public IServerPacket Decode(byte[] data)
+        public PacketRequest(PacketBuffer buffer)
         {
-            return new PacketRequest();
+            // NOOP
+        }
+
+        public override void Handle(ServerSession session)
+        {
+            session.SendPacket(PacketResponse.FromSystem());
         }
     }
 }

@@ -6,16 +6,11 @@ using TridentMc.Networking.State;
 
 namespace TridentMc.Networking.Packets.Status
 {
-    public class PacketResponse : IClientPacket
+    public class PacketResponse : ClientPacket
     {
-        public ConnectionState ConnectionState => ConnectionState.Status;
-        public int Id => 0x00;
+        public override int Id => 0;
 
         public Response Response;
-
-        public PacketResponse()
-        {
-        }
 
         public PacketResponse(Response response)
         {
@@ -42,9 +37,12 @@ namespace TridentMc.Networking.Packets.Status
             );
         }
 
-        public byte[] Encode(IClientPacket packet)
+        public override PacketBuffer Encode()
         {
-            return String.Encode(JsonConvert.SerializeObject(Response));
+            var buffer = new PacketBuffer();
+            buffer.WriteString(JsonConvert.SerializeObject(Response));
+
+            return buffer;
         }
     }
 

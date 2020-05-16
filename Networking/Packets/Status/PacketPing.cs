@@ -4,23 +4,18 @@ using TridentMc.Networking.State;
 
 namespace TridentMc.Networking.Packets.Status
 {
-    public class PacketPing : IServerPacket
+    public class PacketPing : ServerPacket
     {
-        public ConnectionState ConnectionState => ConnectionState.Status;
-        public int Id => 0x01;
-
         public long Payload { get; private set; }
-        
-        public PacketPing() {}
 
-        public PacketPing(long payload)
+        public PacketPing(PacketBuffer buffer)
         {
-            Payload = payload;
+            Payload = buffer.ReadLong();
         }
-        
-        public IServerPacket Decode(byte[] data)
+
+        public override void Handle(ServerSession session)
         {
-            return new PacketPing(Long.Decode(data, out data));
+            session.SendPacket(new PacketPong(Payload));
         }
     }
 }

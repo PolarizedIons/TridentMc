@@ -77,7 +77,7 @@ namespace TridentMc.Networking
             _server.ConnectionSessions.Remove(Id, out _);
         }
 
-        public void SendPacket(IClientPacket packet)
+        public void SendPacket(ClientPacket packet)
         {
             if (UsesCompression)
             {
@@ -86,7 +86,7 @@ namespace TridentMc.Networking
             else
             {
                 var packetId = VarInt.Encode(packet.Id);
-                var encoded = packet.Encode(packet);
+                var encoded = packet.Encode().Bytes;
                 var length = VarInt.Encode(packetId.Length + encoded.Length);
                 var data = length.Concat(packetId).Concat(encoded).ToArray();
                 Log.Debug("[{SessionId}] SEND: {Bytes}", Id, data.GetPrintableBytes());

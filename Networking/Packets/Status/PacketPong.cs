@@ -3,25 +3,23 @@ using TridentMc.Networking.State;
 
 namespace TridentMc.Networking.Packets.Status
 {
-    public class PacketPong : IClientPacket
+    public class PacketPong : ClientPacket
     {
-        public ConnectionState ConnectionState => ConnectionState.Status; 
-        public int Id => 0x01;
+        public override int Id => 1;
 
         public long Payload { get; private set; }
-
-        public PacketPong()
-        {
-        }
 
         public PacketPong(long payload)
         {
             Payload = payload;
         }
 
-        public byte[] Encode(IClientPacket packet)
+        public override PacketBuffer Encode()
         {
-            return Long.Encode(Payload);
+            var buffer = new PacketBuffer();
+            buffer.WriteLong(Payload);
+
+            return buffer;
         }
     }
 }

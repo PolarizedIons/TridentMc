@@ -6,26 +6,21 @@ namespace TridentMc.Events
 {
     public class EventManager
     {
-        private Queue<IEvent> _beforeTickQueuedEvents = new Queue<IEvent>();
-        private Queue<IEvent> _afterTickQueuedEvents = new Queue<IEvent>();
-        private Dictionary<Type, List<ListenerInfo>> _listeners = new Dictionary<Type, List<ListenerInfo>>();
+        private Dictionary<Type, List<Delegate>> _listeners = new Dictionary<Type, List<Delegate>>();
 
         public delegate void Listener<in T>(T theEvent) where T : IEvent;
-        
-        public void Listen<T>(EventPriority priority, Listener<T> listener) where T : IEvent
+
+        public void Listen<T>(Listener<T> listener) where T : IEvent
         {
             var type = typeof(T);
             if (!_listeners.ContainsKey(type))
             {
-                _listeners.Add(type, new List<ListenerInfo>());
+                _listeners.Add(type, new List<Delegate>());
             }
 
-            var info = new ListenerInfo();
-            info.Listener = listener;
-            info.EventPriority = priority;
-            _listeners[type].Add(info);
+            _listeners[type].Add(listener);
         }
-        
+
         public void FireEvent(IEvent theEvent)
         {
             var type = theEvent.GetType();
@@ -34,39 +29,9 @@ namespace TridentMc.Events
                 return;
             }
 
-            foreach (var listenerInfo in _listeners[type].Where(l => l.EventPriority == EventPriority.Immediate))
+            foreach (var listener in _listeners[type])
             {
-                listenerInfo.Listener.DynamicInvoke(theEvent);
-            }
-
-            _beforeTickQueuedEvents.Enqueue(theEvent);
-        }
-
-        public void Tick()
-        {
-            for (int i = 0; i < _beforeTickQueuedEvents.Count; i++)
-            {
-                IEvent theEvent = _beforeTickQueuedEvents.Dequeue();
-
-                foreach (var listenerInfo in _listeners[theEvent.GetType()].Where(l => l.EventPriority == EventPriority.BeforeTick))
-                {
-                    listenerInfo.Listener.DynamicInvoke(theEvent);
-                }
-                
-                _afterTickQueuedEvents.Enqueue(theEvent);
-            }
-        }
-
-        public void Tock()
-        {
-            for (int i = 0; i < _afterTickQueuedEvents.Count; i++)
-            {
-                IEvent theEvent = _afterTickQueuedEvents.Dequeue();
-                
-                foreach (var listenerInfo in _listeners[theEvent.GetType()].Where(l => l.EventPriority == EventPriority.AfterTick))
-                {
-                    listenerInfo.Listener.DynamicInvoke(theEvent);
-                }
+                listener.DynamicInvoke(theEvent);
             }
         }
     }

@@ -16,15 +16,14 @@ namespace TridentMc.Networking
 
         private readonly Server _server;
         private Thread _networkThread;
-        private readonly Packets.Packets _packets;
-        private PacketResponders _responders;
+        private PacketManager _packetManager;
 
         public ICollection<ServerSession> Sessions => _server.ConnectionSessions.Values;
 
         public NetworkManager()
         {
             _server = new Server();
-            _packets = new Packets.Packets();
+            _packetManager = new PacketManager();
         }
 
         public void Start()
@@ -32,8 +31,6 @@ namespace TridentMc.Networking
             Log.Debug("Network Loop starting");
             _networkThread = new Thread(NetworkLoop);
             _networkThread.Start();
-            
-            _responders = new PacketResponders();
         }
 
         public void Stop()
@@ -62,14 +59,13 @@ namespace TridentMc.Networking
                             var packetId = VarInt.Decode(packet, out packet);
                             Log.Debug("[{SessionId}] Packet {PacketId} with state being {State}", session.Id, packetId ,session.ConnectionState);
                             
-                            IServerPacket serverPacketDecoder = _packets.Get<IServerPacket>(PacketDirection.ServerBound, session.ConnectionState, packetId);
-                            if (serverPacketDecoder == null)
+                            var serverPacket = _packetManager.CreateServerPacket(session.ConnectionState, packetId, packet);
+                            if (serverPacket == null)
                             {
                                 Log.Debug("[{SessionId}] -> Unknown packet", session.Id);
-                                continue;
+                                session.Disconnect();
+                                break;
                             }
-
-                            IServerPacket serverPacket = serverPacketDecoder.Decode(packet);
 
                             Type packetReceivedType = typeof(PacketReceived<>).MakeGenericType(serverPacket.GetType());
                             object[] args = {serverPacket, session};
@@ -80,6 +76,8 @@ namespace TridentMc.Networking
                                 Log.Debug("[{SessionId}] Changing state to {NewState}", session.Id, stateChangePacket.NextState);
                                 session.ConnectionState = stateChangePacket.NextState;
                             }
+
+                            serverPacket.Handle(session);
                         }
                     }
                 }
