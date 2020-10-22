@@ -1,31 +1,64 @@
-﻿using System;
+using System;
+using System.IO;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Serilog;
+using Serilog.Events;
+using TridentMc.Extentions;
 
 namespace TridentMc
 {
     class Program
     {
-        private static void Main(string[] args)
+        static async Task<int> Main(string[] args)
         {
-            Console.WriteLine("Setting up logging...");
-
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+                .Enrich.FromLogContext()
                 .WriteTo.Console()
-                .WriteTo.File("logs/logs.txt", rollingInterval: RollingInterval.Day)
                 .CreateLogger();
-            
-            Log.Information("Bootstrap...");
 
-            // Set up settings
-            TridentSettings.BindHost = "0.0.0.0";
-            TridentSettings.BindPort = 25565;
-            TridentSettings.Description = "Hello from C#!";
-            TridentSettings.MaxPlayers = 20;
+            try
+            {
+                using var host = CreateHostBuilder(args).Build();
 
-            // Let's do this!
-            TridentMc.Instance.Start();
-            Log.CloseAndFlush();
+                await host.StartAsync();
+                await host.WaitForShutdownAsync();
+                await host.StopAsync();
+
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                Log.Fatal(ex, "Fatal exception");
+                return 1;
+            }
+            finally
+            {
+                Log.CloseAndFlush();
+            }
+        }
+
+        public static IHostBuilder CreateHostBuilder(string[] args)
+        {
+            return Host.CreateDefaultBuilder(args)
+                .ConfigureAppConfiguration((hostCtx, config) =>
+                {
+                    config.SetBasePath(Directory.GetCurrentDirectory())
+                        .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                        .AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: true)
+                        .AddEnvironmentVariables();
+                })
+                .ConfigureServices((hostCtx, services) =>
+                {
+                    services.DiscoverAndMakeDiServicesAvailable();
+                    services.AddHostedService<App>();
+                })
+                .UseSerilog()
+                .UseConsoleLifetime();
         }
     }
 }

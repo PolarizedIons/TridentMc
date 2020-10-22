@@ -1,1 +1,4 @@
-﻿bin/
+bin/
+obj/
+.idea/
+appsettings.Development.json
