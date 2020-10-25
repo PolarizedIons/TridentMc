@@ -14,7 +14,7 @@ namespace TridentMc.Networking
     public class ServerSession : TcpSession
     {
         private readonly Server _server;
-        private Queue<byte[]> _packetBuffer = new Queue<byte[]>();
+        private readonly Queue<byte[]> _packetBuffer = new Queue<byte[]>();
 
         public ConnectionState ConnectionState { get; private set; } = ConnectionState.Handshaking;
         public int PacketsEnqueued => _packetBuffer.Count();
