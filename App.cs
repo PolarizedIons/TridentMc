@@ -2,29 +2,29 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Serilog;
-using TridentMc.Services;
+using TridentMc.TridentMc;
 
 namespace TridentMc
 {
     public class App : IHostedService
     {
-        private readonly TridentService _tridentService;
+        private readonly TridentMcService _tridentMcService;
 
-        public App(TridentService tridentService)
+        public App(TridentMcService tridentMcService)
         {
-            _tridentService = tridentService;
+            _tridentMcService = tridentMcService;
         }
-        
+
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             Log.Information("Starting Server...");
-            await _tridentService.Start(cancellationToken);
+            await _tridentMcService.Start(cancellationToken);
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
             Log.Information("Shutting down Server...");
-            return Task.CompletedTask;
+            await _tridentMcService.Stop();
         }
     }
 }

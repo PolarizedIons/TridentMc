@@ -15,7 +15,6 @@ namespace TridentMc
         static async Task<int> Main(string[] args)
         {
             Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
                 .Enrich.FromLogContext()
                 .WriteTo.Console()
@@ -54,6 +53,13 @@ namespace TridentMc
                 })
                 .ConfigureServices((hostCtx, services) =>
                 {
+                    Log.Logger = new LoggerConfiguration()
+                        .ReadFrom.Configuration(hostCtx.Configuration)
+                        .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+                        .Enrich.FromLogContext()
+                        .WriteTo.Console()
+                        .CreateLogger();
+
                     services.DiscoverAndMakeDiServicesAvailable();
                     services.AddHostedService<App>();
                 })
