@@ -7,26 +7,28 @@ using NetCoreServer;
 using Serilog;
 using TridentMc.Extentions;
 using TridentMc.Extentions.PacketDataTypes;
+using TridentMc.Networking.Packets;
+using TridentMc.Networking.Packets.Status;
 using TridentMc.Networking.State;
 
 namespace TridentMc.Networking
 {
-    public class ServerSession : TcpSession
+    public class ServerConnection : TcpSession
     {
         private readonly Server _server;
         private readonly Queue<byte[]> _packetBuffer = new Queue<byte[]>();
 
-        public ConnectionState ConnectionState { get; private set; } = ConnectionState.Handshaking;
+        public ConnectionState ConnectionState { get; set; } = ConnectionState.Handshaking;
         public int PacketsEnqueued => _packetBuffer.Count();
 
-        public ServerSession(Server server) : base(server)
+        public ServerConnection(Server server) : base(server)
         {
             _server = server;
         }
 
         protected override void OnConnected()
         {
-            Log.Debug("[{SessionId}] New connection from {Ip}:{Port}", 
+            Log.Debug("[{ConnectionId}] New connection from {Ip}:{Port}", 
                 Id,
                 (Socket.RemoteEndPoint as IPEndPoint)?.Address,
                 (Socket.RemoteEndPoint as IPEndPoint)?.Port
@@ -36,13 +38,13 @@ namespace TridentMc.Networking
 
         protected override void OnDisconnected()
         {
-            Log.Debug("[{SessionId}] Disconnected", Id); 
+            Log.Debug("[{ConnectionId}] Disconnected", Id); 
             _server.ConnectionSessions.TryRemove(Id, out _);
         }
 
         protected override void OnError(SocketError error)
         {
-            Log.Debug("[{SessionId}] Had an error! {Error}", Id, error);
+            Log.Debug("[{ConnectionId}] Had an error! {Error}", Id, error);
             _server.ConnectionSessions.TryRemove(Id, out _);
             Disconnect();
         }
@@ -51,7 +53,7 @@ namespace TridentMc.Networking
         {
             var remaining = new byte[size];
             Array.Copy(buffer, remaining, size);
-            Log.Verbose("[{SessionId}] RECV: {Bytes}", Id, remaining.GetPrintableBytes());
+            Log.Verbose("[{ConnectionId}] RECV: {Bytes}", Id, remaining.GetPrintableBytes());
 
             // Legacy packet
             if (remaining[0] == 0xfe)
@@ -62,7 +64,7 @@ namespace TridentMc.Networking
 
             while (remaining.Length != 0)
             {
-                var packetLength = remaining.DecodeVarint(out remaining);
+                var packetLength = remaining.DecodeVarInt(out remaining);
                 var packet = new byte[packetLength];
                 Array.Copy(remaining, packet, packetLength);
                 _packetBuffer.Enqueue(packet);
@@ -74,6 +76,25 @@ namespace TridentMc.Networking
         public byte[] DequeuePacket()
         {
             return _packetBuffer.Dequeue();
+        }
+
+        public void SendPacket(ClientBoundPacket packet)
+        {
+            var attrs = packet.GetPacketAttribute();
+            if (attrs == null)
+            {
+                Log.Warning("ClientBound packet {PacketType}, doesn't have a packet attribute!", packet.GetType());
+                Disconnect();
+                return;
+            }
+            
+            var buffer = new PacketBuffer();
+
+            packet.Encode(buffer);
+            buffer.WriteToStart(attrs.PacketId.EncodeVarint());
+            buffer.WriteToStart(buffer.Length.EncodeVarint());
+
+            Send(buffer.Buffer);
         }
     }
 }

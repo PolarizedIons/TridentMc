@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TridentMc.Networking.Packets;
 
 namespace TridentMc.Extentions
 {
@@ -15,6 +16,11 @@ namespace TridentMc.Extentions
                             !x.IsAbstract &&
                             x.GetConstructors().Any(c => c.IsPublic)
                             );
+        }
+        
+        public static PacketAttribute GetPacketAttribute(this Type packetType)
+        {
+            return Attribute.GetCustomAttribute(packetType, typeof(PacketAttribute)) as PacketAttribute;
         }
     }
 }
