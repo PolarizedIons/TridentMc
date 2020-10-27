@@ -94,6 +94,8 @@ namespace TridentMc.Networking
             buffer.WriteToStart(attrs.PacketId.EncodeVarint());
             buffer.WriteToStart(buffer.Length.EncodeVarint());
 
+            Log.Verbose("Sending packet {Id} in {State} connection state", attrs.PacketId, ConnectionState);
+            Log.Verbose("SEND: {Data}", buffer.Buffer.GetPrintableBytes());
             Send(buffer.Buffer);
         }
     }
